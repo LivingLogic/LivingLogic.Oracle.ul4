@@ -185,7 +185,7 @@ as
 			int(c_out, extract(day from p_value));
 			int(c_out, extract(hour from p_value));
 			int(c_out, extract(minute from p_value));
-			int(c_out, extract(second from p_value));
+			int(c_out, trunc(extract(second from p_value)));
 			int(c_out, to_number(to_char(p_value, 'FF6')));
 		end if;
 	end;
