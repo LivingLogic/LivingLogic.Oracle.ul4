@@ -39,7 +39,7 @@ Define the following Oracle function::
 		return c_out;
 	end;
 
-Then you can call this function and parse the resut with the following Python code::
+Then you can call this function and parse the result with the following Python code::
 
 	import cx_Oracle
 
