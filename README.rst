@@ -7,7 +7,7 @@ UL4ON is a lightweight text-based cross-platform object serialization format.
 Oracle
 ======
 
-This Oracle packages makes it possible to output UL4ON encoded data that can
+This Oracle package makes it possible to output UL4ON encoded data that can
 then be parsed by any of the UL4ON implementations in Python_, Java_ and
 Javascript_.
 
