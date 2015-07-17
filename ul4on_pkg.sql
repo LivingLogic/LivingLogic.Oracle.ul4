@@ -7,6 +7,7 @@ as
 	procedure color(c_out in out nocopy clob, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
 	procedure datetime(c_out in out nocopy clob, p_value date);
 	procedure datetime(c_out in out nocopy clob, p_value timestamp);
+	procedure datetime(c_out in out nocopy clob, p_value timestamp with time zone);
 	procedure timedelta(c_out in out nocopy clob, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure monthdelta(c_out in out nocopy clob, p_months integer := 0);
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null);
@@ -20,6 +21,7 @@ as
 	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
+	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp with time zone);
 	procedure keytimedelta(c_out in out nocopy clob, p_key in varchar2, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure keymonthdelta(c_out in out nocopy clob, p_key in varchar2, p_months integer := 0);
 	procedure keyslice(c_out in out nocopy clob, p_key in varchar2, p_start integer := null, p_stop integer := null);
@@ -169,6 +171,28 @@ as
 	end;
 
 	procedure datetime(c_out in out nocopy clob, p_value timestamp)
+	as
+	begin
+		if c_out is null then
+			dbms_lob.createtemporary(c_out, true);
+		else
+			dbms_lob.writeappend(c_out, 1, ' ');
+		end if;
+		if p_value is null then
+			dbms_lob.writeappend(c_out, 1, 'n');
+		else
+			dbms_lob.writeappend(c_out, 1, 'z');
+			int(c_out, extract(year from p_value));
+			int(c_out, extract(month from p_value));
+			int(c_out, extract(day from p_value));
+			int(c_out, extract(hour from p_value));
+			int(c_out, extract(minute from p_value));
+			int(c_out, trunc(extract(second from p_value)));
+			int(c_out, to_number(to_char(p_value, 'FF6')));
+		end if;
+	end;
+	
+	procedure datetime(c_out in out nocopy clob, p_value timestamp with time zone)
 	as
 	begin
 		if c_out is null then
@@ -343,7 +367,14 @@ as
 		key(c_out, p_key);
 		datetime(c_out, p_value);
 	end;
-
+	
+	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp with time zone)
+	as
+	begin
+		key(c_out, p_key);
+		datetime(c_out, p_value);
+	end;
+	
 	procedure keytimedelta(c_out in out nocopy clob, p_key in varchar2, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0)
 	as
 	begin
