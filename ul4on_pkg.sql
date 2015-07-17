@@ -191,7 +191,7 @@ as
 			int(c_out, to_number(to_char(p_value, 'FF6')));
 		end if;
 	end;
-	
+
 	procedure datetime(c_out in out nocopy clob, p_value timestamp with time zone)
 	as
 	begin
@@ -367,14 +367,14 @@ as
 		key(c_out, p_key);
 		datetime(c_out, p_value);
 	end;
-	
+
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp with time zone)
 	as
 	begin
 		key(c_out, p_key);
 		datetime(c_out, p_value);
 	end;
-	
+
 	procedure keytimedelta(c_out in out nocopy clob, p_key in varchar2, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0)
 	as
 	begin
