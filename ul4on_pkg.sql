@@ -33,7 +33,7 @@ as
 	procedure endlist(c_out in out nocopy clob);
 	procedure beginset(c_out in out nocopy clob);
 	procedure endset(c_out in out nocopy clob);
-	procedure begindict(c_out in out nocopy clob);
+	procedure begindict(c_out in out nocopy clob, p_ordered integer := 0);
 	procedure enddict(c_out in out nocopy clob);
 	procedure beginobject(c_out in out nocopy clob, p_type varchar2);
 	function beginobject(c_out in out nocopy clob, p_type in varchar2, p_registry in out nocopy backrefregistry, p_id in varchar2) return boolean;
@@ -461,7 +461,7 @@ as
 		dbms_lob.writeappend(c_out, 1, '}');
 	end;
 
-	procedure begindict(c_out in out nocopy clob)
+	procedure begindict(c_out in out nocopy clob, p_ordered integer := 0)
 	as
 	begin
 		if c_out is null then
@@ -469,7 +469,7 @@ as
 		else
 			dbms_lob.writeappend(c_out, 1, ' ');
 		end if;
-		dbms_lob.writeappend(c_out, 1, 'd');
+		dbms_lob.writeappend(c_out, 1, case when p_ordered = 0 then 'd' else 'e' end);
 	end;
 
 	procedure enddict(c_out in out nocopy clob)
