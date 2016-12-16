@@ -1,5 +1,7 @@
 create or replace package ul4on_pkg
 as
+	type backrefregistry is table of integer index by varchar2(100);
+
 	procedure none(c_out in out nocopy clob);
 	procedure bool(c_out in out nocopy clob, p_value in integer);
 	procedure int(c_out in out nocopy clob, p_value in integer);
@@ -34,6 +36,7 @@ as
 	procedure begindict(c_out in out nocopy clob);
 	procedure enddict(c_out in out nocopy clob);
 	procedure beginobject(c_out in out nocopy clob, p_type varchar2);
+	function beginobject(c_out in out nocopy clob, p_type in varchar2, p_registry in out nocopy backrefregistry, p_id in varchar2) return boolean;
 	procedure endobject(c_out in out nocopy clob);
 	procedure append(c_out in out nocopy clob, p_value in clob);
 end;
@@ -490,6 +493,39 @@ as
 		end if;
 		dbms_lob.writeappend(c_out, 1, 'o');
 		str(c_out, p_type);
+	end;
+
+	function beginobject(c_out in out nocopy clob, p_type in varchar2, p_registry in out nocopy backrefregistry, p_id in varchar2)
+	return boolean
+	as
+		v_strindex varchar2(50);
+	begin
+		if c_out is null then
+			dbms_lob.createtemporary(c_out, true);
+		else
+			dbms_lob.writeappend(c_out, 1, ' ');
+		end if;
+		if p_registry.exists(p_type || ':' || p_id) then
+			v_strindex := to_char(p_registry(p_type || ':' || p_id));
+			dbms_lob.writeappend(c_out, 1, '^');
+			dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
+			return false;
+		else
+			dbms_lob.writeappend(c_out, 1, 'O');
+			p_registry(p_type || ':' || p_id) := p_registry.count;
+
+			if p_registry.exists('str:' || p_type) then
+				v_strindex := to_char(p_registry('str:' || p_type));
+				dbms_lob.writeappend(c_out, 2, ' ^');
+				dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
+			else
+				dbms_lob.writeappend(c_out, 3, ' S"');
+				writeul4onstr(c_out, p_type);
+				dbms_lob.writeappend(c_out, 1, '"');
+				p_registry('str:' || p_type) := p_registry.count;
+			end if;
+			return true;
+		end if;
 	end;
 
 	procedure endobject(c_out in out nocopy clob)
