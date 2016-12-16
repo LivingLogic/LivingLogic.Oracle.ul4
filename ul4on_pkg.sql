@@ -9,7 +9,6 @@ as
 	procedure color(c_out in out nocopy clob, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
 	procedure datetime(c_out in out nocopy clob, p_value date);
 	procedure datetime(c_out in out nocopy clob, p_value timestamp);
-	procedure datetime(c_out in out nocopy clob, p_value timestamp with time zone);
 	procedure timedelta(c_out in out nocopy clob, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure monthdelta(c_out in out nocopy clob, p_months integer := 0);
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null);
@@ -23,7 +22,6 @@ as
 	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
-	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp with time zone);
 	procedure keytimedelta(c_out in out nocopy clob, p_key in varchar2, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure keymonthdelta(c_out in out nocopy clob, p_key in varchar2, p_months integer := 0);
 	procedure keyslice(c_out in out nocopy clob, p_key in varchar2, p_start integer := null, p_stop integer := null);
@@ -193,28 +191,6 @@ as
 		end if;
 	end;
 
-	procedure datetime(c_out in out nocopy clob, p_value timestamp with time zone)
-	as
-	begin
-		if c_out is null then
-			dbms_lob.createtemporary(c_out, true);
-		else
-			dbms_lob.writeappend(c_out, 1, ' ');
-		end if;
-		if p_value is null then
-			dbms_lob.writeappend(c_out, 1, 'n');
-		else
-			dbms_lob.writeappend(c_out, 1, 'z');
-			int(c_out, extract(year from p_value));
-			int(c_out, extract(month from p_value));
-			int(c_out, extract(day from p_value));
-			int(c_out, extract(hour from p_value));
-			int(c_out, extract(minute from p_value));
-			int(c_out, trunc(extract(second from p_value)));
-			int(c_out, to_number(to_char(p_value, 'FF6')));
-		end if;
-	end;
-
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null)
 	as
 	begin
@@ -228,9 +204,41 @@ as
 		int(c_out, p_stop);
 	end;
 
+	procedure writeul4onstr(c_out in out nocopy clob, p_value in varchar2)
+	as
+		v_buf varchar2(32000);
+	begin
+		if c_out is null then
+			dbms_lob.createtemporary(c_out, true);
+		end if;
+
+		v_buf := p_value;
+		v_buf := replace(v_buf, '\', '\\');
+		v_buf := asciistr(v_buf);
+		v_buf := replace(v_buf, '\', '\u');
+
+		-- escaped-Backslash zurück
+		v_buf := replace(v_buf, '\u005C', '\');
+
+		for i in 1 .. 7 loop
+			v_buf := replace(v_buf, chr(i), '\x' || replace(substr(to_char(ascii(chr(i)), 'xx'), 2, 2), ' ', '0'));
+		end loop;
+		v_buf := replace(v_buf, chr(8), '\b');
+		v_buf := replace(v_buf, chr(9), '\t');
+		v_buf := replace(v_buf, chr(10), '\n');
+		v_buf := replace(v_buf, chr(11), '\x' || replace(substr(to_char(ascii(11), 'xx'), 2, 2), ' ', '0'));
+		v_buf := replace(v_buf, chr(12), '\f');
+		v_buf := replace(v_buf, chr(13), '\r');
+		v_buf := replace(v_buf, '"', '\"');
+		for i in 128 .. 159 loop
+			v_buf := replace(v_buf, chr(i), '\x' || replace(substr(to_char(ascii(chr(i)), 'xx'), 2, 2), ' ', '0'));
+		end loop;
+
+		dbms_lob.writeappend(c_out, length(v_buf), v_buf);
+	end;
+
 	procedure str(c_out in out nocopy clob, p_value in varchar2)
 	as
-		v_buf varchar2(10);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -241,42 +249,17 @@ as
 			dbms_lob.writeappend(c_out, 1, 'n');
 		else
 			dbms_lob.writeappend(c_out, 1, 's');
-
 			dbms_lob.writeappend(c_out, 1, '"');
-			for i in 1 .. length(p_value) loop
-				v_buf := substr(p_value, i, 1);
-				case v_buf
-					when chr(8) then
-						dbms_lob.writeappend(c_out, 2, '\b');
-					when chr(9) then
-						dbms_lob.writeappend(c_out, 2, '\t');
-					when chr(10) then
-						dbms_lob.writeappend(c_out, 2, '\n');
-					when chr(12) then
-						dbms_lob.writeappend(c_out, 2, '\f');
-					when chr(13) then
-						dbms_lob.writeappend(c_out, 2, '\r');
-					when '"' then
-						dbms_lob.writeappend(c_out, 2, '\"');
-					when '\' then
-						dbms_lob.writeappend(c_out, 2, '\\');
-					else
-						if ascii(v_buf) < 32 or (ascii(v_buf) >= 128 and ascii(v_buf) < 160) then
-							v_buf := '\x' || replace(substr(to_char(ascii(v_buf), 'xx'), 2, 2), ' ', '0');
-							dbms_lob.writeappend(c_out, length(v_buf), v_buf);
-						else
-							v_buf := replace(asciistr(v_buf), '\', '\u');
-							dbms_lob.writeappend(c_out, length(v_buf), v_buf);
-						end if;
-				end case;
-			end loop;
+
+			writeul4onstr(c_out, p_value);
+
 			dbms_lob.writeappend(c_out, 1, '"');
 		end if;
 	end;
 
 	procedure str(c_out in out nocopy clob, p_value in clob)
 	as
-		v_buf varchar2(10);
+		v_buf varchar2(32000);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -289,33 +272,12 @@ as
 			dbms_lob.writeappend(c_out, 1, 's');
 
 			dbms_lob.writeappend(c_out, 1, '"');
-			for i in 1 .. length(p_value) loop
-				v_buf := substr(p_value, i, 1);
-				case v_buf
-					when chr(8) then
-						dbms_lob.writeappend(c_out, 2, '\b');
-					when chr(9) then
-						dbms_lob.writeappend(c_out, 2, '\t');
-					when chr(10) then
-						dbms_lob.writeappend(c_out, 2, '\n');
-					when chr(12) then
-						dbms_lob.writeappend(c_out, 2, '\f');
-					when chr(13) then
-						dbms_lob.writeappend(c_out, 2, '\r');
-					when '"' then
-						dbms_lob.writeappend(c_out, 2, '\"');
-					when '\' then
-						dbms_lob.writeappend(c_out, 2, '\\');
-					else
-						if ascii(v_buf) < 32 or (ascii(v_buf) >= 128 and ascii(v_buf) < 160) then
-							v_buf := '\x' || replace(substr(to_char(ascii(v_buf), 'xx'), 2, 2), ' ', '0');
-							dbms_lob.writeappend(c_out, length(v_buf), v_buf);
-						else
-							v_buf := replace(asciistr(v_buf), '\', '\u');
-							dbms_lob.writeappend(c_out, length(v_buf), v_buf);
-						end if;
-				end case;
+
+			for i in 0 .. trunc((dbms_lob.getlength(p_value) - 1 )/10000) loop
+				v_buf := dbms_lob.substr(p_value, 10000, i * 10000 + 1);
+				writeul4onstr(c_out, v_buf);
 			end loop;
+
 			dbms_lob.writeappend(c_out, 1, '"');
 		end if;
 	end;
@@ -362,13 +324,6 @@ as
 	end;
 
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp)
-	as
-	begin
-		key(c_out, p_key);
-		datetime(c_out, p_value);
-	end;
-
-	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp with time zone)
 	as
 	begin
 		key(c_out, p_key);
