@@ -122,7 +122,6 @@ as
 
 	procedure timedelta(c_out in out nocopy clob, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0)
 	as
-		v_int varchar2(50);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -137,7 +136,6 @@ as
 
 	procedure monthdelta(c_out in out nocopy clob, p_months integer := 0)
 	as
-		v_int varchar2(50);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -216,7 +214,6 @@ as
 
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null)
 	as
-		v_int varchar2(50);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
