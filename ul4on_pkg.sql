@@ -13,8 +13,10 @@ as
 	procedure monthdelta(c_out in out nocopy clob, p_months integer := 0);
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null);
 	procedure str(c_out in out nocopy clob, p_value in varchar2);
+	procedure str(c_out in out nocopy clob, p_registry in out nocopy backrefregistry, p_value in varchar2);
 	procedure str(c_out in out nocopy clob, p_value in clob);
 	procedure key(c_out in out nocopy clob, p_key in varchar2);
+	procedure key(c_out in out nocopy clob, p_registry in out nocopy backrefregistry, p_key in varchar2);
 	procedure keynone(c_out in out nocopy clob, p_key in varchar2);
 	procedure keybool(c_out in out nocopy clob, p_key in varchar2, p_value in integer);
 	procedure keyint(c_out in out nocopy clob, p_key in varchar2, p_value in integer);
@@ -213,6 +215,7 @@ as
 		end if;
 
 		v_buf := p_value;
+
 		v_buf := replace(v_buf, '\', '\\');
 		v_buf := asciistr(v_buf);
 		v_buf := replace(v_buf, '\', '\u');
@@ -257,6 +260,39 @@ as
 		end if;
 	end;
 
+	procedure str(c_out in out nocopy clob, p_registry in out nocopy backrefregistry, p_value in varchar2)
+	as
+		v_strindex varchar2(10);
+	begin
+		if c_out is null then
+			dbms_lob.createtemporary(c_out, true);
+		else
+			dbms_lob.writeappend(c_out, 1, ' ');
+		end if;
+		if p_value is null then
+			dbms_lob.writeappend(c_out, 1, 'n');
+		elsif length(p_value) < 300-4 then -- the key must fit in the backrefregistry, so we refuse to store long string in the registry
+			if p_registry.exists('str:' || p_value) then
+				v_strindex := to_char(p_registry('str:' || p_value));
+				dbms_lob.writeappend(c_out, 1, '^');
+				dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
+			else
+				dbms_lob.writeappend(c_out, 1, 'S');
+				dbms_lob.writeappend(c_out, 1, '"');
+				writeul4onstr(c_out, p_value);
+				dbms_lob.writeappend(c_out, 1, '"');
+				p_registry('str:' || p_value) := p_registry.count;
+			end if;
+		else
+			dbms_lob.writeappend(c_out, 1, 's');
+			dbms_lob.writeappend(c_out, 1, '"');
+
+			writeul4onstr(c_out, p_value);
+
+			dbms_lob.writeappend(c_out, 1, '"');
+		end if;
+	end;
+
 	procedure str(c_out in out nocopy clob, p_value in clob)
 	as
 		v_buf varchar2(32000);
@@ -286,6 +322,12 @@ as
 	as
 	begin
 		str(c_out, p_key);
+	end;
+
+	procedure key(c_out in out nocopy clob, p_registry in out nocopy backrefregistry, p_key in varchar2)
+	as
+	begin
+		str(c_out, p_registry, p_key);
 	end;
 
 	procedure keynone(c_out in out nocopy clob, p_key in varchar2)
@@ -453,33 +495,27 @@ as
 	function beginobject(c_out in out nocopy clob, p_type in varchar2, p_registry in out nocopy backrefregistry, p_id in varchar2)
 	return boolean
 	as
-		v_strindex varchar2(50);
+		v_strindex varchar2(10);
 	begin
-		if c_out is null then
-			dbms_lob.createtemporary(c_out, true);
+		if p_id is null then
+			none(c_out);
 		else
-			dbms_lob.writeappend(c_out, 1, ' ');
-		end if;
-		if p_registry.exists(p_type || ':' || p_id) then
-			v_strindex := to_char(p_registry(p_type || ':' || p_id));
-			dbms_lob.writeappend(c_out, 1, '^');
-			dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
-			return false;
-		else
-			dbms_lob.writeappend(c_out, 1, 'O');
-			p_registry(p_type || ':' || p_id) := p_registry.count;
-
-			if p_registry.exists('str:' || p_type) then
-				v_strindex := to_char(p_registry('str:' || p_type));
-				dbms_lob.writeappend(c_out, 2, ' ^');
-				dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
+			if c_out is null then
+				dbms_lob.createtemporary(c_out, true);
 			else
-				dbms_lob.writeappend(c_out, 3, ' S"');
-				writeul4onstr(c_out, p_type);
-				dbms_lob.writeappend(c_out, 1, '"');
-				p_registry('str:' || p_type) := p_registry.count;
+				dbms_lob.writeappend(c_out, 1, ' ');
 			end if;
-			return true;
+			if p_registry.exists(p_type || ':' || p_id) then
+				v_strindex := to_char(p_registry(p_type || ':' || p_id));
+				dbms_lob.writeappend(c_out, 1, '^');
+				dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
+				return false;
+			else
+				dbms_lob.writeappend(c_out, 1, 'O');
+				p_registry(p_type || ':' || p_id) := p_registry.count;
+				str(c_out, p_registry, p_type);
+				return true;
+			end if;
 		end if;
 	end;
 
