@@ -15,6 +15,15 @@ as
 	procedure str(c_out in out nocopy clob, p_value in varchar2);
 	procedure str(c_out in out nocopy clob, p_registry in out nocopy backrefregistry, p_value in varchar2);
 	procedure str(c_out in out nocopy clob, p_value in clob);
+	procedure template(
+		c_out in out nocopy clob,
+		p_name varchar2,
+		p_source in clob,
+		p_signature varchar2 := null,
+		p_whitespace varchar2 := 'keep',
+		p_startdelim varchar2 := '<?',
+		p_enddelim varchar2 := '?>'
+	);
 	procedure key(c_out in out nocopy clob, p_key in varchar2);
 	procedure key(c_out in out nocopy clob, p_registry in out nocopy backrefregistry, p_key in varchar2);
 	procedure keynone(c_out in out nocopy clob, p_key in varchar2);
@@ -316,6 +325,28 @@ as
 
 			dbms_lob.writeappend(c_out, 1, '"');
 		end if;
+	end;
+
+	procedure template(
+		c_out in out nocopy clob,
+		p_name varchar2,
+		p_source in clob,
+		p_signature varchar2 := null,
+		p_whitespace varchar2 := 'keep',
+		p_startdelim varchar2 := '<?',
+		p_enddelim varchar2 := '?>'
+	)
+	as
+	begin
+		beginobject(c_out, 'de.livinglogic.ul4.template');
+			none(c_out); -- The version ``None`` means that the template must be compiled from source
+			str(c_out, p_name);
+			str(c_out, p_source);
+			str(c_out, p_signature);
+			str(c_out, p_whitespace);
+			str(c_out, p_startdelim);
+			str(c_out, p_enddelim);
+		endobject(c_out);
 	end;
 
 	procedure key(c_out in out nocopy clob, p_key in varchar2)
