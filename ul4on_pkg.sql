@@ -1,6 +1,6 @@
 create or replace package ul4on_pkg
 as
-	type backrefregistry is table of integer index by varchar2(100);
+	type backrefregistry is table of integer index by varchar2(300);
 
 	procedure none(c_out in out nocopy clob);
 	procedure bool(c_out in out nocopy clob, p_value in integer);
