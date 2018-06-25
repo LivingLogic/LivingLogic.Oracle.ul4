@@ -1,7 +1,16 @@
-create or replace type ul4ongen as object
+create or replace type UL4ONGEN as object
 (
-	/*
-	An ul4ongen object can be used for creating a UL4ON dump in PL/SQL. Example:
+	/******************************************************************************\
+	UL4ON is a lightweight text-based crossplatform data interchange format.
+
+	As the name suggests its purpose is to transport the object types supported by
+	UL4. For more info about UL4 see `http://python.livinglogic.de/UL4.html` and for
+	more info about UL4ON see `http://python.livinglogic.de/UL4ON.html`.
+
+	The `ul4ongen` type provides a third way for creating an UL4ON dump in PL/SQL.
+	(the other two being the packages `ul4on_pkg` and `ul4onbuffer_pkg`.
+
+	Example:
 
 	create or replace function user_ful4on
 	return clob
@@ -21,7 +30,7 @@ create or replace type ul4ongen as object
 		c_out.enddict();
 		return c_out.value;
 	end;
-	*/
+	\******************************************************************************/
 
 	-- Private attributes: Don't access directly
 	out_private clob,
@@ -30,7 +39,7 @@ create or replace type ul4ongen as object
 	-- Constructor
 	constructor function ul4ongen return self as result,
 
-	-- Methods for outputting various object into the UL4ON dump
+	-- Methods for outputting various objects into the UL4ON dump
 	member procedure none(self in out nocopy ul4ongen),
 	member procedure bool(self in out nocopy ul4ongen, p_value in integer),
 	member procedure int(self in out nocopy ul4ongen, p_value in integer),
@@ -90,9 +99,10 @@ create or replace type ul4ongen as object
 	member procedure write_private(self in out nocopy ul4ongen, p_value in varchar2),
 	member procedure writeescapedstring_private(self in out nocopy ul4ongen, p_value in varchar2)
 );
+
 /
 
-create or replace type body ul4ongen as
+create or replace type body UL4ONGEN as
 	constructor function ul4ongen
 	return self as result
 	as
@@ -497,4 +507,6 @@ create or replace type body ul4ongen as
 		write_private(v_buf);
 	end;
 end;
+
 /
+

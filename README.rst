@@ -29,7 +29,7 @@ Define the following Oracle function::
 		ul4on_pkg.begindict(c_out);
 			ul4on_pkg.keystr(c_out, 'firstname', 'John');
 			ul4on_pkg.keystr(c_out, 'lastname', 'Doe');
-			ul4on_pkg.keydatetime(c_out, 'birthday', to_date('2000-02-29', 'YYYY-MM-DD'));
+			ul4on_pkg.keydate(c_out, 'birthday', to_date('2000-02-29', 'YYYY-MM-DD'));
 			ul4on_pkg.key(c_out, 'emails');
 			ul4on_pkg.beginlist(c_out);
 				ul4on_pkg.str(c_out, 'john@example.org');
@@ -57,7 +57,7 @@ This will print the parsed data::
 	{
 		'firstname': 'John',
 		'lastname': 'Doe',
-		'birthday': datetime.datetime(2000, 2, 29, 0, 0),
+		'birthday': datetime.date(2000, 2, 29),
 		'emails': ['john@example.org', 'jdoe@example.net']
 	}
 

@@ -1,8 +1,20 @@
-create or replace package ul4onbuffer_pkg
+create or replace package UL4ONBUFFER_PKG
 as
+	/******************************************************************************\
+	UL4ON is a lightweight text-based crossplatform data interchange format.
 
+	As the name suggests its purpose is to transport the object types supported by
+	UL4. For more info about UL4 see `http://python.livinglogic.de/UL4.html` and for
+	more info about UL4ON see `http://python.livinglogic.de/UL4ON.html`.
+	\******************************************************************************/
+
+	-- Initialized some internal buffers and variables (must be called before any other procedures)
 	procedure init(c_out in out nocopy clob);
+
+	-- Flush all internal buffers (must be call before the CLOB value `c_out` is used/returned)
 	procedure flush(c_out in out nocopy clob);
+
+	-- Methods for outputting various objects into the UL4ON dump
 	procedure none(c_out in out nocopy clob);
 	procedure bool(c_out in out nocopy clob, p_value in integer);
 	procedure int(c_out in out nocopy clob, p_value in integer);
@@ -10,6 +22,8 @@ as
 	procedure color(c_out in out nocopy clob, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
 	procedure datetime(c_out in out nocopy clob, p_value date);
 	procedure datetime(c_out in out nocopy clob, p_value timestamp);
+	procedure date_(c_out in out nocopy clob, p_value date);
+	procedure date_(c_out in out nocopy clob, p_value timestamp);
 	procedure timedelta(c_out in out nocopy clob, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure monthdelta(c_out in out nocopy clob, p_months integer := 0);
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null);
@@ -24,41 +38,59 @@ as
 		p_startdelim varchar2 := '<?',
 		p_enddelim varchar2 := '?>'
 	);
+
+	-- Method for outputting a string key (simply calls str())
 	procedure key(c_out in out nocopy clob, p_key in varchar2);
+
+	-- Methods for outputting key/value pairs inside a dictionary
 	procedure keynone(c_out in out nocopy clob, p_key in varchar2);
 	procedure keybool(c_out in out nocopy clob, p_key in varchar2, p_value in integer);
 	procedure keyint(c_out in out nocopy clob, p_key in varchar2, p_value in integer);
 	procedure keyfloat(c_out in out nocopy clob, p_key in varchar2, p_value in number);
 	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
+	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value date);
+	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
 	procedure keytimedelta(c_out in out nocopy clob, p_key in varchar2, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure keymonthdelta(c_out in out nocopy clob, p_key in varchar2, p_months integer := 0);
 	procedure keyslice(c_out in out nocopy clob, p_key in varchar2, p_start integer := null, p_stop integer := null);
-	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in varchar2);
+	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in varchar2, p_backref boolean := false);
 	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in clob);
+
+	-- Begin and end a list object
 	procedure beginlist(c_out in out nocopy clob);
 	procedure endlist(c_out in out nocopy clob);
+
+	-- Begin and end a set object
 	procedure beginset(c_out in out nocopy clob);
 	procedure endset(c_out in out nocopy clob);
+
+	-- Begin and end a dict object
 	procedure begindict(c_out in out nocopy clob, p_ordered integer := 0);
 	procedure enddict(c_out in out nocopy clob);
+
+	-- Begin and end a custom object
 	procedure beginobject(c_out in out nocopy clob, p_type varchar2);
 	function beginobject(c_out in out nocopy clob, p_type in varchar2, p_id in varchar2) return boolean;
 	procedure endobject(c_out in out nocopy clob);
 end;
+
 /
 
-create or replace package body ul4onbuffer_pkg
+create or replace package body UL4ONBUFFER_PKG
 as
 	type backrefregistry is table of integer index by varchar2(300);
 	registry backrefregistry;
 	buffer varchar2(32000);
+	buffer_len integer;
+
 	procedure init(c_out in out nocopy clob)
 	as
 	begin
 		registry.delete;
 		buffer := null;
+		buffer_len := 0;
 	end;
 
 	procedure flush(c_out in out nocopy clob)
@@ -66,15 +98,19 @@ as
 	begin
 		dbms_lob.writeappend(c_out, length(buffer), buffer);
 		buffer := null;
+		buffer_len := 0;
 	end;
 
 	procedure write(c_out in out nocopy clob, p_value in varchar2)
 	as
+		v_addlen integer;
 	begin
-		if buffer is not null and length(buffer) + length(p_value) >= 32000 then
+		v_addlen := length(p_value);
+		if buffer_len + v_addlen >= 32000 then
 			flush(c_out);
 		end if;
 		buffer := buffer || p_value;
+		buffer_len := buffer_len + v_addlen;
 	end;
 
 	procedure none(c_out in out nocopy clob)
@@ -178,6 +214,42 @@ as
 		int(c_out, p_months);
 	end;
 
+	procedure date_(c_out in out nocopy clob, p_value date)
+	as
+	begin
+		if c_out is null then
+			dbms_lob.createtemporary(c_out, true);
+		else
+			write(c_out, ' ');
+		end if;
+		if p_value is null then
+			write(c_out, 'n');
+		else
+			write(c_out, 'x');
+			int(c_out, extract(year from p_value));
+			int(c_out, extract(month from p_value));
+			int(c_out, extract(day from p_value));
+		end if;
+	end;
+
+	procedure date_(c_out in out nocopy clob, p_value timestamp)
+	as
+	begin
+		if c_out is null then
+			dbms_lob.createtemporary(c_out, true);
+		else
+			write(c_out, ' ');
+		end if;
+		if p_value is null then
+			write(c_out, 'n');
+		else
+			write(c_out, 'x');
+			int(c_out, extract(year from p_value));
+			int(c_out, extract(month from p_value));
+			int(c_out, extract(day from p_value));
+		end if;
+	end;
+
 	procedure datetime(c_out in out nocopy clob, p_value date)
 	as
 	begin
@@ -237,42 +309,17 @@ as
 
 	procedure writeul4onstr(c_out in out nocopy clob, p_value in varchar2)
 	as
-		v_buf varchar2(32000);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
 		end if;
---		write(c_out, p_value);
-
-		v_buf := p_value;
---		v_buf := replace(v_buf, '''', '''''');
-
-		v_buf := replace(v_buf, '\', '\\');
-		v_buf := asciistr(v_buf);
-		v_buf := replace(v_buf, '\', '\u');
-
-		-- escaped-Backslash zurück
-		v_buf := replace(v_buf, '\u005C', '\');
-
-		for i in 1 .. 7 loop
-			v_buf := replace(v_buf, chr(i), '\x' || replace(substr(to_char(ascii(chr(i)), 'xx'), 2, 2), ' ', '0'));
-		end loop;
-		v_buf := replace(v_buf, chr(8), '\b');
-		v_buf := replace(v_buf, chr(9), '\t');
-		v_buf := replace(v_buf, chr(10), '\n');
-		v_buf := replace(v_buf, chr(11), '\x' || replace(substr(to_char(ascii(11), 'xx'), 2, 2), ' ', '0'));
-		v_buf := replace(v_buf, chr(12), '\f');
-		v_buf := replace(v_buf, chr(13), '\r');
-		v_buf := replace(v_buf, '"', '\"');
-		for i in 128 .. 159 loop
-			v_buf := replace(v_buf, chr(i), '\x' || replace(substr(to_char(ascii(chr(i)), 'xx'), 2, 2), ' ', '0'));
-		end loop;
-
-		write(c_out, v_buf);
+		write(c_out, replace(replace(p_value, '\', '\\'), '"', '\"'));
 	end;
 
 	procedure str(c_out in out nocopy clob, p_value in varchar2, p_backref boolean := false)
 	as
+		v_regkey varchar2(300);
+		v_buf varchar2(16000 char);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -281,28 +328,34 @@ as
 		end if;
 		if p_value is null then
 			write(c_out, 'n');
-		elsif p_backref and length(p_value) < 300-4 then -- the key must fit in the backrefregistry, so we refuse to store long string in the registry
-			if registry.exists('str:' || p_value) then
+		elsif p_backref and length(p_value) < 300-4 then -- the key must fit in the backrefregistry, so we refuse to store long strings in the registry
+			v_regkey := 'str:' || p_value;
+			if registry.exists(v_regkey) then
 				write(c_out, '^');
-				write(c_out, to_char(registry('str:' || p_value)));
+				write(c_out, to_char(registry(v_regkey)));
 			else
 				write(c_out, 'S"');
-				writeul4onstr(c_out, p_value);
+				if length(p_value) <= 16000 then
+					writeul4onstr(c_out, p_value);
+				else
+					for i in 0 .. trunc((length(p_value) - 1 )/16000) loop
+						v_buf := substr(p_value, i * 16000 + 1, 16000);
+						writeul4onstr(c_out, v_buf);
+					end loop;
+				end if;
 				write(c_out, '"');
-				registry('str:' || p_value) := registry.count;
+				registry(v_regkey) := registry.count;
 			end if;
 		else
 			write(c_out, 's"');
-
 			writeul4onstr(c_out, p_value);
-
 			write(c_out, '"');
 		end if;
 	end;
 
 	procedure str(c_out in out nocopy clob, p_value in clob)
 	as
-		v_buf varchar2(32000);
+		v_buf varchar2(16000 char);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -314,8 +367,8 @@ as
 		else
 			write(c_out, 's"');
 
-			for i in 0 .. trunc((dbms_lob.getlength(p_value) - 1 )/10000) loop
-				v_buf := dbms_lob.substr(p_value, 10000, i * 10000 + 1);
+			for i in 0 .. trunc((dbms_lob.getlength(p_value) - 1 )/16000) loop
+				v_buf := dbms_lob.substr(p_value, 16000, i * 16000 + 1);
 				writeul4onstr(c_out, v_buf);
 			end loop;
 
@@ -379,6 +432,20 @@ as
 		float(c_out, p_value);
 	end;
 
+	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value date)
+	as
+	begin
+		key(c_out, p_key);
+		date_(c_out, p_value);
+	end;
+
+	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value timestamp)
+	as
+	begin
+		key(c_out, p_key);
+		date_(c_out, p_value);
+	end;
+
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date)
 	as
 	begin
@@ -421,11 +488,11 @@ as
 		color(c_out, p_red, p_green, p_blue, p_alpha);
 	end;
 
-	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in varchar2)
+	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in varchar2, p_backref boolean := false)
 	as
 	begin
 		key(c_out, p_key);
-		str(c_out, p_value);
+		str(c_out, p_value, p_backref);
 	end;
 
 	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in clob)
@@ -519,6 +586,7 @@ as
 	begin
 		if p_id is null then
 			none(c_out);
+			return false;
 		else
 			if c_out is null then
 				dbms_lob.createtemporary(c_out, true);
@@ -549,4 +617,6 @@ as
 		write(c_out, ')');
 	end;
 end;
+
 /
+
