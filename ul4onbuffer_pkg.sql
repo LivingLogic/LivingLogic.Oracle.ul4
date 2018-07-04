@@ -313,7 +313,13 @@ as
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
 		end if;
-		write(c_out, replace(replace(p_value, '\', '\\'), '"', '\"'));
+		if length(p_value) <= 16000 then
+			write(c_out, replace(replace(p_value, '\', '\\'), '"', '\"'));
+		else
+			for i in 0 .. trunc((length(p_value) - 1)/16000) loop
+				write(c_out, replace(replace(substr(p_value, i * 16000 + 1, 16000), '\', '\\'), '"', '\"'));
+			end loop;
+		end if;
 	end;
 
 	procedure str(c_out in out nocopy clob, p_value in varchar2, p_backref boolean := false)
@@ -335,14 +341,7 @@ as
 				write(c_out, to_char(registry(v_regkey)));
 			else
 				write(c_out, 'S"');
-				if length(p_value) <= 16000 then
-					writeul4onstr(c_out, p_value);
-				else
-					for i in 0 .. trunc((length(p_value) - 1 )/16000) loop
-						v_buf := substr(p_value, i * 16000 + 1, 16000);
-						writeul4onstr(c_out, v_buf);
-					end loop;
-				end if;
+				writeul4onstr(c_out, p_value);
 				write(c_out, '"');
 				registry(v_regkey) := registry.count;
 			end if;

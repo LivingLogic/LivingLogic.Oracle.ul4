@@ -296,15 +296,22 @@ as
 
 	procedure writeul4onstr(c_out in out nocopy clob, p_value in varchar2)
 	as
-		v_buf varchar2(32000);
+		v_buffer varchar2(32000);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
 		end if;
 
-		v_buf := replace(replace(p_value, '\', '\\'), '"', '\"');
+		if length(p_value) <= 16000 then
+			v_buffer := replace(replace(p_value, '\', '\\'), '"', '\"');
+			dbms_lob.writeappend(c_out, length(v_buffer), v_buffer);
+		else
+			for i in 0 .. trunc((length(p_value) - 1)/16000) loop
+				v_buffer := substr(p_value, i * 16000 + 1, 16000);
+				dbms_lob.writeappend(c_out, length(v_buffer), v_buffer);
+			end loop;
+		end if;
 
-		dbms_lob.writeappend(c_out, length(v_buf), v_buf);
 	end;
 
 	procedure str(c_out in out nocopy clob, p_value in varchar2)
@@ -319,18 +326,8 @@ as
 		if p_value is null then
 			dbms_lob.writeappend(c_out, 1, 'n');
 		else
-			dbms_lob.writeappend(c_out, 1, 's');
-			dbms_lob.writeappend(c_out, 1, '"');
-
-			if length(p_value) <= 16000 then
-				writeul4onstr(c_out, p_value);
-			else
-				for i in 0 .. trunc((length(p_value) - 1 )/16000) loop
-					v_buf := substr(p_value, i * 16000 + 1, 16000);
-					writeul4onstr(c_out, v_buf);
-				end loop;
-			end if;
-
+			dbms_lob.writeappend(c_out, 2, 's"');
+			writeul4onstr(c_out, p_value);
 			dbms_lob.writeappend(c_out, 1, '"');
 		end if;
 	end;
@@ -370,7 +367,7 @@ as
 
 	procedure str(c_out in out nocopy clob, p_value in clob)
 	as
-		v_buf varchar2(32000);
+		v_buffer varchar2(32000);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -380,13 +377,11 @@ as
 		if p_value is null then
 			dbms_lob.writeappend(c_out, 1, 'n');
 		else
-			dbms_lob.writeappend(c_out, 1, 's');
-
-			dbms_lob.writeappend(c_out, 1, '"');
+			dbms_lob.writeappend(c_out, 2, 's"');
 
 			for i in 0 .. trunc((dbms_lob.getlength(p_value) - 1 )/10000) loop
-				v_buf := dbms_lob.substr(p_value, 10000, i * 10000 + 1);
-				writeul4onstr(c_out, v_buf);
+				v_buffer := dbms_lob.substr(p_value, 10000, i * 10000 + 1);
+				writeul4onstr(c_out, v_buffer);
 			end loop;
 
 			dbms_lob.writeappend(c_out, 1, '"');
