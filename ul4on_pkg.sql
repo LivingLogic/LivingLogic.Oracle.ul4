@@ -396,7 +396,7 @@ as
 	as
 	begin
 		beginobject(c_out, 'de.livinglogic.ul4.template');
-			none(c_out); -- The version ``None`` means that the template must be compiled from source
+			none(c_out); -- The version `None` means that the template must be compiled from source
 			str(c_out, p_name);
 			str(c_out, p_source);
 			str(c_out, p_signature);
