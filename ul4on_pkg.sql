@@ -61,10 +61,10 @@ as
 	procedure keyint(c_out in out nocopy clob, p_key in varchar2, p_value in integer);
 	procedure keyfloat(c_out in out nocopy clob, p_key in varchar2, p_value in number);
 	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
-	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date);
-	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
 	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value date);
 	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
+	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date);
+	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
 	procedure keytimedelta(c_out in out nocopy clob, p_key in varchar2, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure keymonthdelta(c_out in out nocopy clob, p_key in varchar2, p_months integer := 0);
 	procedure keyslice(c_out in out nocopy clob, p_key in varchar2, p_start integer := null, p_stop integer := null);
