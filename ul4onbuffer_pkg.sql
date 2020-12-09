@@ -80,9 +80,9 @@ end;
 
 create or replace package body UL4ONBUFFER_PKG
 as
-	type backrefregistry is table of integer index by varchar2(300);
+	type backrefregistry is table of integer index by varchar2(1000 char);
 	registry backrefregistry;
-	buffer varchar2(32000);
+	buffer varchar2(32767 char);
 	buffer_len integer;
 
 	procedure init(c_out in out nocopy clob)
@@ -105,8 +105,8 @@ as
 	as
 		v_addlen integer;
 	begin
-		v_addlen := length(p_value);
-		if buffer_len + v_addlen >= 32000 then
+		v_addlen := lengthb(p_value);
+		if buffer_len + v_addlen >= 32767 then
 			flush(c_out);
 		end if;
 		buffer := buffer || p_value;
@@ -324,7 +324,7 @@ as
 
 	procedure str(c_out in out nocopy clob, p_value in varchar2, p_backref boolean := false)
 	as
-		v_regkey varchar2(300);
+		v_regkey varchar2(1000);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
@@ -333,7 +333,7 @@ as
 		end if;
 		if p_value is null then
 			write(c_out, 'n');
-		elsif p_backref and length(p_value) < 300-4 then -- the key must fit in the backrefregistry, so we refuse to store long strings in the registry
+		elsif p_backref and length(p_value) < 1000-4 then -- the key must fit in the backrefregistry, so we refuse to store long strings in the registry
 			v_regkey := 'str:' || p_value;
 			if registry.exists(v_regkey) then
 				write(c_out, '^');
