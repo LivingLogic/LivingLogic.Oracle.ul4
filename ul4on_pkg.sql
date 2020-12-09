@@ -311,7 +311,6 @@ as
 				dbms_lob.writeappend(c_out, length(v_buffer), v_buffer);
 			end loop;
 		end if;
-
 	end;
 
 	procedure str(c_out in out nocopy clob, p_value in varchar2)
