@@ -349,15 +349,13 @@ as
 				dbms_lob.writeappend(c_out, 1, '^');
 				dbms_lob.writeappend(c_out, length(v_strindex), v_strindex);
 			else
-				dbms_lob.writeappend(c_out, 1, 'S');
-				dbms_lob.writeappend(c_out, 1, '"');
+				dbms_lob.writeappend(c_out, 2, 'S"');
 				writeul4onstr(c_out, p_value);
 				dbms_lob.writeappend(c_out, 1, '"');
 				p_registry('str:' || p_value) := p_registry.count;
 			end if;
 		else
-			dbms_lob.writeappend(c_out, 1, 's');
-			dbms_lob.writeappend(c_out, 1, '"');
+			dbms_lob.writeappend(c_out, 2, 's"');
 
 			writeul4onstr(c_out, p_value);
 
