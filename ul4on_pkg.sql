@@ -343,7 +343,7 @@ as
 		end if;
 		if p_value is null then
 			dbms_lob.writeappend(c_out, 1, 'n');
-		elsif length(p_value) < 300-4 then -- the key must fit in the backrefregistry, so we refuse to store long string in the registry
+		elsif length(p_value) < 300-4 then -- the key must fit in the backrefregistry, so we refuse to store long strings in the registry
 			if p_registry.exists('str:' || p_value) then
 				v_strindex := to_char(p_registry('str:' || p_value));
 				dbms_lob.writeappend(c_out, 1, '^');
