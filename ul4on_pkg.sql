@@ -316,7 +316,6 @@ as
 
 	procedure str(c_out in out nocopy clob, p_value in varchar2)
 	as
-		v_buf varchar2(16000 char);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
