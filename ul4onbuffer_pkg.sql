@@ -20,10 +20,10 @@ as
 	procedure int(c_out in out nocopy clob, p_value in integer);
 	procedure float(c_out in out nocopy clob, p_value in number);
 	procedure color(c_out in out nocopy clob, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
-	procedure datetime(c_out in out nocopy clob, p_value date);
-	procedure datetime(c_out in out nocopy clob, p_value timestamp);
 	procedure date_(c_out in out nocopy clob, p_value date);
 	procedure date_(c_out in out nocopy clob, p_value timestamp);
+	procedure datetime(c_out in out nocopy clob, p_value date);
+	procedure datetime(c_out in out nocopy clob, p_value timestamp);
 	procedure timedelta(c_out in out nocopy clob, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0);
 	procedure monthdelta(c_out in out nocopy clob, p_months integer := 0);
 	procedure slice(c_out in out nocopy clob, p_start integer := null, p_stop integer := null);
