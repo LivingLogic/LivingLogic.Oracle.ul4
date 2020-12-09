@@ -39,7 +39,7 @@ as
 		p_enddelim varchar2 := '?>'
 	);
 
-	-- Method for outputting a string key (simply calls str())
+	-- Method for outputting a string key (simply calls `str()` with `p_backref=true`)
 	procedure key(c_out in out nocopy clob, p_key in varchar2);
 
 	-- Methods for outputting key/value pairs inside a dictionary
