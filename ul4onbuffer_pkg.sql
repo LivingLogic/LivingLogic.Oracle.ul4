@@ -325,7 +325,6 @@ as
 	procedure str(c_out in out nocopy clob, p_value in varchar2, p_backref boolean := false)
 	as
 		v_regkey varchar2(300);
-		v_buf varchar2(16000 char);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
