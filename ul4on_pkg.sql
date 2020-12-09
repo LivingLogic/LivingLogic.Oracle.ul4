@@ -308,6 +308,7 @@ as
 		else
 			for i in 0 .. trunc((length(p_value) - 1)/16000) loop
 				v_buffer := substr(p_value, i * 16000 + 1, 16000);
+				v_buffer := replace(replace(v_buffer, '\', '\\'), '"', '\"');
 				dbms_lob.writeappend(c_out, length(v_buffer), v_buffer);
 			end loop;
 		end if;
