@@ -356,9 +356,7 @@ as
 			end if;
 		else
 			dbms_lob.writeappend(c_out, 2, 's"');
-
 			writeul4onstr(c_out, p_value);
-
 			dbms_lob.writeappend(c_out, 1, '"');
 		end if;
 	end;
