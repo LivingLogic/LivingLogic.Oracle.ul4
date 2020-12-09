@@ -296,7 +296,7 @@ as
 
 	procedure writeul4onstr(c_out in out nocopy clob, p_value in varchar2)
 	as
-		v_buffer varchar2(32000);
+		v_buffer varchar2(32000 char);
 	begin
 		if c_out is null then
 			dbms_lob.createtemporary(c_out, true);
