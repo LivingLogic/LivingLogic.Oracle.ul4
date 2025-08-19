@@ -38,6 +38,7 @@ as
 	procedure int(c_out in out nocopy clob, p_value in integer);
 	procedure float(c_out in out nocopy clob, p_value in number);
 	procedure color(c_out in out nocopy clob, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
+	procedure color(c_out in out nocopy clob, p_rgba32 in integer);
 	procedure date_(c_out in out nocopy clob, p_value date);
 	procedure date_(c_out in out nocopy clob, p_value timestamp);
 	procedure datetime(c_out in out nocopy clob, p_value date);
@@ -52,9 +53,7 @@ as
 		p_name varchar2,
 		p_source in clob,
 		p_signature varchar2 := null,
-		p_whitespace varchar2 := 'keep',
-		p_startdelim varchar2 := '<?',
-		p_enddelim varchar2 := '?>'
+		p_whitespace varchar2 := 'keep'
 	);
 
 	-- Method for outputting a string key (simply calls `str()` with `p_backref=true`)
@@ -66,6 +65,7 @@ as
 	procedure keyint(c_out in out nocopy clob, p_key in varchar2, p_value in integer);
 	procedure keyfloat(c_out in out nocopy clob, p_key in varchar2, p_value in number);
 	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_red in integer, p_green in integer, p_blue in integer, p_alpha in integer);
+	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_rgba32 in integer);
 	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value date);
 	procedure keydate(c_out in out nocopy clob, p_key in varchar2, p_value timestamp);
 	procedure keydatetime(c_out in out nocopy clob, p_key in varchar2, p_value date);
@@ -98,6 +98,19 @@ end;
 
 create or replace package body UL4ONBUFFER_PKG
 as
+	/******************************************************************************\
+	The key length for the `backrefregistry` must be long enough for all keys
+	that are used in an UL4ON dump. These include:
+
+	-	Primary keys of records (which means `varchar2(30)` in all cases).
+	-	`control.ctl_id` || '.' || `lookup.lup_kennung` (used for
+		`de.livinglogic.livingapi.lookupitem` objects, i.e. records from `lookup`).
+	-	`tablename || '/' || primarykeyvalue || '/' || fieldname` (used for
+		`de.livinglogic.livingapi.file`, i.e. records from `upload`).
+
+	1000 should be enough for all of those cases (although `lookup.lup_kennung` is
+	longer).
+	\******************************************************************************/
 	type backrefregistry is table of integer index by varchar2(1000 char);
 	registry backrefregistry;
 	buffer varchar2(32767 char);
@@ -204,6 +217,22 @@ as
 		int(c_out, p_green);
 		int(c_out, p_blue);
 		int(c_out, p_alpha);
+	end;
+
+	procedure color(c_out in out nocopy clob, p_rgba32 in integer)
+	as
+	begin
+		if p_rgba32 is null then
+			none(c_out);
+		else
+			color(
+				c_out,
+				mod(floor(p_rgba32/(256*256*256)), 256),
+				mod(floor(p_rgba32/(256*256)), 256),
+				mod(floor(p_rgba32/256), 256),
+				mod(floor(p_rgba32), 256)
+			);
+		end if;
 	end;
 
 	procedure timedelta(c_out in out nocopy clob, p_days integer := 0, p_seconds integer := 0, p_microseconds integer := 0)
@@ -397,9 +426,7 @@ as
 		p_name varchar2,
 		p_source in clob,
 		p_signature varchar2 := null,
-		p_whitespace varchar2 := 'keep',
-		p_startdelim varchar2 := '<?',
-		p_enddelim varchar2 := '?>'
+		p_whitespace varchar2 := 'keep'
 	)
 	as
 	begin
@@ -409,8 +436,6 @@ as
 			str(c_out, p_source);
 			str(c_out, p_signature);
 			str(c_out, p_whitespace);
-			str(c_out, p_startdelim);
-			str(c_out, p_enddelim);
 		endobject(c_out);
 	end;
 
@@ -502,6 +527,13 @@ as
 	begin
 		key(c_out, p_key);
 		color(c_out, p_red, p_green, p_blue, p_alpha);
+	end;
+
+	procedure keycolor(c_out in out nocopy clob, p_key in varchar2, p_rgba32 in integer)
+	as
+	begin
+		key(c_out, p_key);
+		color(c_out, p_rgba32);
 	end;
 
 	procedure keystr(c_out in out nocopy clob, p_key in varchar2, p_value in varchar2, p_backref boolean := false)

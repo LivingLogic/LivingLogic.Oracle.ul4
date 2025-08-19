@@ -3,10 +3,6 @@ UL4ON
 
 UL4ON is a lightweight text-based cross-platform object serialization format.
 
-
-Oracle
-======
-
 This Oracle package makes it possible to output UL4ON encoded data that can
 then be parsed by any of the UL4ON implementations in Python_, Java_ and
 Javascript_.
@@ -17,7 +13,7 @@ Javascript_.
 
 
 Example
-=======
+-------
 
 Define the following Oracle function::
 
@@ -41,11 +37,11 @@ Define the following Oracle function::
 
 Then you can call this function and parse the result with the following Python code::
 
-	import cx_Oracle
+	import oracledb
 
 	from ll import ul4on
 
-	db = cx_Oracle.connect(...)
+	db = oracledb.connect(...)
 	c = db.cursor()
 	c.execute("select ul4on_test from dual")
 	dump = c.fetchone()[0].read()
@@ -60,6 +56,17 @@ This will print the parsed data::
 		'birthday': datetime.date(2000, 2, 29),
 		'emails': ['john@example.org', 'jdoe@example.net']
 	}
+
+
+vSQL
+====
+
+vSQL provides a way to build Oracle SQL queries safely and dynamically using
+UL4 expressions. Instead of manually concatenating strings,	you can express
+query logic with vSQL (a variant of UL4), which is then compiled into proper
+SQL. This approach eliminates the risky parts of query construction,
+effectively preventing SQL injection attacks, while offering the expressive
+power of an ORM without the overhead.
 
 
 Documentation
