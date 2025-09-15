@@ -176,6 +176,8 @@ as
 	function contains_number_numberlist(p_needle in number, p_haystack in numbers) return integer deterministic;
 	function contains_str_strlist(p_needle in varchar2, p_haystack in varchars) return integer deterministic;
 	function contains_str_cloblist(p_needle in varchar2, p_haystack in clobs) return integer deterministic;
+	function contains_clob_strlist(p_needle in clob, p_haystack in varchars) return integer deterministic;
+	function contains_clob_cloblist(p_needle in clob, p_haystack in clobs) return integer deterministic;
 	function contains_datetime_datetimelist(p_needle in date, p_haystack in dates) return integer deterministic;
 
 	/******************************************************************************\
@@ -312,6 +314,7 @@ as
 	function attr_geo_lat(p_geo varchar2) return number deterministic;
 	function attr_geo_long(p_geo varchar2) return number deterministic;
 	function attr_geo_info(p_geo varchar2) return varchar2 deterministic;
+	function attr_date_weekday(p_date date) return integer deterministic;
 
 	/******************************************************************************\
 	The following functions implement various vSQL functions.
@@ -3988,16 +3991,56 @@ as
 	return integer
 	deterministic
 	as
-		v_test clob;
-		v_testc varchar2(4000);
 	begin
 		if p_needle is null then
 			return contains_null_cloblist(p_haystack);
 		else
 			if p_haystack is not null then
 				for i in 1..p_haystack.count loop
-					v_test := p_haystack(i);
-					v_testc := v_test;
+					if length(p_haystack(i)) = length(p_needle) and p_haystack(i) = p_needle then
+						return 1;
+					end if;
+				end loop;
+			end if;
+			return 0;
+		end if;
+	end;
+
+	function contains_clob_strlist(
+		p_needle in clob,
+		p_haystack in varchars
+	)
+	return integer
+	deterministic
+	as
+	begin
+		if p_needle is null or length(p_needle) = 0 then
+			return contains_null_strlist(p_haystack);
+		else
+			if p_haystack is not null then
+				for i in 1..p_haystack.count loop
+					if length(p_haystack(i)) = length(p_needle) and p_haystack(i) = p_needle then
+						return 1;
+					end if;
+				end loop;
+			end if;
+			return 0;
+		end if;
+	end;
+
+	function contains_clob_cloblist(
+		p_needle in clob,
+		p_haystack in clobs
+	)
+	return integer
+	deterministic
+	as
+	begin
+		if p_needle is null or length(p_needle) = 0 then
+			return contains_null_cloblist(p_haystack);
+		else
+			if p_haystack is not null then
+				for i in 1..p_haystack.count loop
 					if p_haystack(i) = p_needle then
 						return 1;
 					end if;
@@ -5905,6 +5948,16 @@ as
 	begin
 		geo_parse(p_geo, v_lat, v_long, v_info);
 		return v_info;
+	end;
+
+	function attr_date_weekday(
+		p_date date
+	)
+	return integer
+	deterministic
+	as
+	begin
+		return mod(trunc(p_date) - trunc(p_date, 'IW'), 7);
 	end;
 
 	function date_int(
