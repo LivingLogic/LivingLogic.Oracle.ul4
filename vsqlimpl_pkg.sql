@@ -1,3 +1,12 @@
+create sequence GLOBAL_SEQ
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	minvalue 1
+	cycle
+	cache 20
+	order;
+
 create or replace package VSQLIMPL_PKG
 as
 	/******************************************************************************\
@@ -334,6 +343,7 @@ as
 	function set_strlist(p_list varchars) return varchars deterministic;
 	function set_datetimelist(p_list dates) return dates deterministic;
 	function dist_geo_geo(p_geo1 varchar2, p_geo2 varchar2) return number deterministic;
+	function seq return integer;
 
 	/******************************************************************************\
 	The following functions implement various vSQL methods.
@@ -1846,11 +1856,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			elsif p_value1 < p_value2 then
 				return -1;
 			elsif p_value1 > p_value2 then
@@ -1873,11 +1883,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			elsif p_value1 < p_value2 then
 				return -1;
 			elsif p_value1 > p_value2 then
@@ -1900,11 +1910,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			elsif p_value1 < p_value2 then
 				return -1;
 			elsif p_value1 > p_value2 then
@@ -1927,11 +1937,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			elsif p_value1 < p_value2 then
 				return -1;
 			elsif p_value1 > p_value2 then
@@ -1954,11 +1964,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			elsif p_value1 < p_value2 then
 				return -1;
 			elsif p_value1 > p_value2 then
@@ -1981,11 +1991,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			elsif p_value1 < p_value2 then
 				return -1;
 			elsif p_value1 > p_value2 then
@@ -2008,11 +2018,11 @@ as
 			if p_value2 is null or length(p_value2) = 0 then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null or length(p_value2) = 0 then
-				return 1;
+				return null;
 			else
 				return dbms_lob.compare(p_value1, p_value2);
 			end if;
@@ -2031,11 +2041,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				return dbms_lob.compare(p_value1, p_value2);
 			end if;
@@ -2054,11 +2064,11 @@ as
 			if p_value2 is null or length(p_value2) = 0 then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null or length(p_value2) = 0 then
-				return 1;
+				return null;
 			else
 				return dbms_lob.compare(p_value1, p_value2);
 			end if;
@@ -2078,15 +2088,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_int_int(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2114,15 +2124,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_int_int(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2150,15 +2160,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_int_int(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2186,15 +2196,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_int_int(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2222,15 +2232,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_str_str(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2258,15 +2268,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_str_clob(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2294,15 +2304,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_clob_str(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2330,15 +2340,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_clob_clob(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2366,15 +2376,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2.count) loop
 					v_subcmp := cmp_datetime_datetime(p_value1(i), p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2401,11 +2411,11 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				if p_value1 < p_value2 then
 					return -1;
@@ -2431,15 +2441,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1, p_value2.count) loop
 					v_subcmp := cmp_int_int(null, p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2467,15 +2477,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1, p_value2.count) loop
 					v_subcmp := cmp_number_number(null, p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2503,15 +2513,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1, p_value2.count) loop
 					v_subcmp := cmp_str_str(null, p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2539,15 +2549,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1, p_value2.count) loop
 					v_subcmp := cmp_clob_clob(null, p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2575,15 +2585,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1, p_value2.count) loop
 					v_subcmp := cmp_datetime_datetime(null, p_value2(i));
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2611,7 +2621,7 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
@@ -2619,7 +2629,7 @@ as
 			else
 				for i in 1 .. least(p_value1.count, p_value2) loop
 					v_subcmp := cmp_int_int(p_value1(i), null);
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2647,15 +2657,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2) loop
 					v_subcmp := cmp_number_number(p_value1(i), null);
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2683,15 +2693,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2) loop
 					v_subcmp := cmp_str_str(p_value1(i), null);
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2719,15 +2729,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2) loop
 					v_subcmp := cmp_clob_clob(p_value1(i), null);
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -2755,15 +2765,15 @@ as
 			if p_value2 is null then
 				return 0;
 			else
-				return -1;
+				return null;
 			end if;
 		else
 			if p_value2 is null then
-				return 1;
+				return null;
 			else
 				for i in 1 .. least(p_value1.count, p_value2) loop
 					v_subcmp := cmp_datetime_datetime(p_value1(i), null);
-					if v_subcmp != 0 then
+					if v_subcmp is null or v_subcmp != 0 then
 						return v_subcmp;
 					end if;
 				end loop;
@@ -5093,6 +5103,8 @@ as
 	begin
 		if p_str is null then
 			return 0;
+		elsif not regexp_like(p_str, '^\s*-?[0-9]+\s*$') then
+			return null;
 		else
 			begin
 				v_int := p_str;
@@ -5118,7 +5130,11 @@ as
 				if dbms_lob.getlength(p_clob) > 30000 then
 					v_int := null;
 				else
-					v_int := cast(p_clob as varchar2);
+					if not regexp_like(p_clob, '^\s*-?[0-9]+\s*$') then
+						return null;
+					else
+						v_int := cast(p_clob as varchar2);
+					end if;
 				end if;
 			exception when others then
 				v_int := null;
@@ -6365,6 +6381,15 @@ as
 
 			return v_dist;
 		end if;
+	end;
+
+	function seq
+	return integer
+	as
+		v_val integer;
+	begin
+		select global_seq.nextval into v_val from dual;
+		return v_val;
 	end;
 
 	function startswith_clob_str(

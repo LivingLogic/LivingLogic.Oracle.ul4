@@ -25,6 +25,7 @@ with open("ul4onblobbuffer_pkg.sql", "w") as f:
 
 
 with open("vsqlimpl_pkg.sql", "w") as f:
+	export(f, orasql.Sequence("GLOBAL_SEQ"))
 	export(f, orasql.Package("VSQLIMPL_PKG"))
 	export(f, orasql.PackageBody("VSQLIMPL_PKG"))
 
