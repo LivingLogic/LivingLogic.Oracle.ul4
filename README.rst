@@ -15,7 +15,9 @@ Javascript_.
 Example
 -------
 
-Define the following Oracle function::
+Define the following Oracle function:
+
+.. sourcecode:: sql
 
 	create or replace function ul4on_test
 	return clob
@@ -35,9 +37,11 @@ Define the following Oracle function::
 		return c_out;
 	end;
 
-Then you can call this function and parse the result with the following Python code::
+Then you can call this function and parse the result with the following Python code:
 
-	import oracledb
+.. sourcecode:: python
+
+import oracledb
 
 	from ll import ul4on
 
@@ -49,6 +53,8 @@ Then you can call this function and parse the result with the following Python c
 	print(data)
 
 This will print the parsed data::
+
+.. sourcecode:: json
 
 	{
 		'firstname': 'John',
