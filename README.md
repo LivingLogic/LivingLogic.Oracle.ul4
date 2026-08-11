@@ -70,12 +70,17 @@ SQL. This approach eliminates the risky parts of query construction,
 effectively preventing SQL injection attacks, while offering the expressive
 power of an ORM without the overhead.
 
+`vsqlimpl_pkg.sql` includes the "vSQL standard library" for Oracle. Import that
+into your Oracle database to be able to use vSQL with that database.
+
 
 # Documentation
 
 The Python documentation contains more info about UL4ON.
 
-- http://www.livinglogic.de/Python/ul4on/index.html
+The Python documentation contains more info about
+[UL4ON](https://python.livinglogic.de/UL4ON.html) and
+[vSQL](https://python.livinglogic.de/vSQL.html)
 
 
 # Authors
