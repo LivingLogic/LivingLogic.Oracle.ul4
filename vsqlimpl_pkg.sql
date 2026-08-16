@@ -3692,18 +3692,18 @@ as
 	return integer
 	deterministic
 	as
-		v_r1 number(12, 9) := attr_color_r(p_color1);
-		v_g1 number(12, 9) := attr_color_g(p_color1);
-		v_b1 number(12, 9) := attr_color_b(p_color1);
-		v_a1 number(12, 9) := attr_color_a(p_color1);
-		v_r2 number(12, 9) := attr_color_r(p_color2);
-		v_g2 number(12, 9) := attr_color_g(p_color2);
-		v_b2 number(12, 9) := attr_color_b(p_color2);
-		v_a2 number(12, 9) := attr_color_a(p_color2);
-		v_rf number(12, 9);
-		v_gf number(12, 9);
-		v_bf number(12, 9);
-		v_af number(12, 9);
+		v_r1 number := attr_color_r(p_color1);
+		v_g1 number := attr_color_g(p_color1);
+		v_b1 number := attr_color_b(p_color1);
+		v_a1 number := attr_color_a(p_color1);
+		v_r2 number := attr_color_r(p_color2);
+		v_g2 number := attr_color_g(p_color2);
+		v_b2 number := attr_color_b(p_color2);
+		v_a2 number := attr_color_a(p_color2);
+		v_rf number;
+		v_gf number;
+		v_bf number;
+		v_af number;
 	begin
 		-- Scale components of p_color1 to the range [0, 1]
 		v_r1 := v_r1/255;
@@ -5833,10 +5833,10 @@ as
 		v_b integer;
 		v_a integer;
 	begin
-		v_r := floor(p_r * 255);
-		v_g := floor(p_g * 255);
-		v_b := floor(p_b * 255);
-		v_a := floor(p_a * 255);
+		v_r := round(p_r * 255);
+		v_g := round(p_g * 255);
+		v_b := round(p_b * 255);
+		v_a := round(p_a * 255);
 
 		if v_r < 0 then
 			v_r := 0;
