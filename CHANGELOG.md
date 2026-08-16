@@ -1,5 +1,11 @@
 # Changes
 
+## 0.5 (2026-08-16)
+
+Fixed `split_clob_str(clob, varchar2, integer)`: the `p_maxsplit` argument was
+ignored because of a broken condition (`split_str_str()` had the correct one).
+
+
 ## 0.4 (2026-08-16)
 
 Added the missing function `bool_nullset(integer)`, which is required now that

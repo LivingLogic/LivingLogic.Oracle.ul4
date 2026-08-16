@@ -6927,7 +6927,7 @@ as
 				else
 					v_to := instr(v_string, p_separator, v_from);
 				end if;
-				if v_to = 0 and (v_restsplits is null or v_restsplits <= 0) then
+				if v_to = 0 or (v_restsplits is not null and v_restsplits <= 0) then
 					v_to := length(v_string)+1;
 				end if;
 				v_result.extend();
