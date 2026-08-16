@@ -173,6 +173,8 @@ as
 	\******************************************************************************/
 	function contains_str_str(p_needle in varchar2, p_haystack in varchar2)	return integer deterministic;
 	function contains_str_clob(p_needle in varchar2, p_haystack in clob)	return integer deterministic;
+	function contains_clob_str(p_needle in clob, p_haystack in varchar2)	return integer deterministic;
+	function contains_clob_clob(p_needle in clob, p_haystack in clob)	return integer deterministic;
 	function contains_null_nulllist(p_haystack in integer) return integer deterministic;
 	function contains_null_intlist(p_haystack in integers) return integer deterministic;
 	function contains_null_numberlist(p_haystack in numbers) return integer deterministic;
@@ -3780,6 +3782,48 @@ as
 			return 0;
 		else
 			if dbms_lob.instr(p_haystack, p_needle) = 0 then
+				return 0;
+			else
+				return 1;
+			end if;
+		end if;
+	end;
+
+	function contains_clob_str(
+		p_needle in clob,
+		p_haystack in varchar2
+	)
+	return integer
+	deterministic
+	as
+	begin
+		if p_needle is null or dbms_lob.getlength(p_needle) = 0 then
+			return 1;
+		elsif p_haystack is null then
+			return 0;
+		else
+			if instr(p_haystack, p_needle) = 0 then
+				return 0;
+			else
+				return 1;
+			end if;
+		end if;
+	end;
+
+	function contains_clob_clob(
+		p_needle in clob,
+		p_haystack in clob
+	)
+	return integer
+	deterministic
+	as
+	begin
+		if p_needle is null or dbms_lob.getlength(p_needle) = 0 then
+			return 1;
+		elsif p_haystack is null or dbms_lob.getlength(p_haystack) = 0 then
+			return 0;
+		else
+			if instr(p_haystack, p_needle) = 0 then
 				return 0;
 			else
 				return 1;

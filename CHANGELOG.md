@@ -1,5 +1,13 @@
 # Changes
 
+## 0.3 (2026-08-16)
+
+Added the missing functions `contains_clob_str(clob, varchar2)` and
+`contains_clob_clob(clob, clob)`. The vSQL rules for `CLOB in STR`,
+`CLOB in CLOB`, `CLOB not in STR` and `CLOB not in CLOB` generate calls
+to them, so those expressions failed with `ORA-00904`.
+
+
 ## 0.2 (2026-08-16)
 
 Added the missing function `bool_nulllist(integer)`. The vSQL rules for
