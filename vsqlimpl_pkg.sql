@@ -246,6 +246,7 @@ as
 	argument types.
 	\******************************************************************************/
 	function bool_clob(p_clob in clob) return integer deterministic;
+	function bool_nulllist(p_value in integer) return integer deterministic;
 	function bool_intlist(p_list in integers) return integer deterministic;
 	function bool_numberlist(p_list in numbers) return integer deterministic;
 	function bool_strlist(p_list in varchars) return integer deterministic;
@@ -5001,6 +5002,20 @@ as
 	as
 	begin
 		if p_clob is null or dbms_lob.getlength(p_clob) = 0 then
+			return 0;
+		else
+			return 1;
+		end if;
+	end;
+
+	function bool_nulllist(
+		p_value in integer
+	)
+	return integer
+	deterministic
+	as
+	begin
+		if p_value is null or p_value = 0 then
 			return 0;
 		else
 			return 1;
