@@ -249,6 +249,7 @@ as
 	\******************************************************************************/
 	function bool_clob(p_clob in clob) return integer deterministic;
 	function bool_nulllist(p_value in integer) return integer deterministic;
+	function bool_nullset(p_value in integer) return integer deterministic;
 	function bool_intlist(p_list in integers) return integer deterministic;
 	function bool_numberlist(p_list in numbers) return integer deterministic;
 	function bool_strlist(p_list in varchars) return integer deterministic;
@@ -341,6 +342,7 @@ as
 	function list_str(p_str varchar2) return varchars deterministic;
 	function list_clob(p_clob clob) return varchars deterministic;
 	function set_str(p_str varchar2) return varchars deterministic;
+	function set_clob(p_str clob) return varchars deterministic;
 	function set_intlist(p_list integers) return integers deterministic;
 	function set_numberlist(p_list numbers) return numbers deterministic;
 	function set_strlist(p_list varchars) return varchars deterministic;
@@ -5066,6 +5068,20 @@ as
 		end if;
 	end;
 
+	function bool_nullset(
+		p_value in integer
+	)
+	return integer
+	deterministic
+	as
+	begin
+		if p_value is null or p_value = 0 then
+			return 0;
+		else
+			return 1;
+		end if;
+	end;
+
 	function bool_intlist(
 		p_list in integers
 	)
@@ -6212,6 +6228,40 @@ as
 		end if;
 		for i in 1 .. length(p_str) loop
 			v_set(substr(p_str, i, 1)) := 1;
+		end loop;
+		v_key := v_set.first;
+		while v_key is not null loop
+			v_result.extend();
+			v_result(v_result.count) := v_key;
+			v_key := v_set.next(v_key);
+		end loop;
+		return v_result;
+	end;
+
+	function set_clob(
+		p_str in clob
+	)
+	return varchars
+	deterministic
+	as
+		type setdict is table of integer index by varchar2(4000);
+		v_set setdict;
+		v_result varchars := varchars();
+		v_chunk varchar2(32767);
+		v_len integer;
+		v_pos integer := 1;
+		v_key varchar2(1);
+	begin
+		if p_str is null then
+			return v_result;
+		end if;
+		v_len := dbms_lob.getlength(p_str);
+		while v_pos <= v_len loop
+			v_chunk := dbms_lob.substr(p_str, 4000, v_pos);
+			for i in 1 .. length(v_chunk) loop
+				v_set(substr(v_chunk, i, 1)) := 1;
+			end loop;
+			v_pos := v_pos + 4000;
 		end loop;
 		v_key := v_set.first;
 		while v_key is not null loop
